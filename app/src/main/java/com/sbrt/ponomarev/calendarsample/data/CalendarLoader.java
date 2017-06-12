@@ -1,10 +1,11 @@
-package com.sbrt.ponomarev.calendarsample;
+package com.sbrt.ponomarev.calendarsample.data;
 
 import android.content.Context;
 import android.database.Cursor;
 import android.provider.CalendarContract;
 import android.support.v4.content.AsyncTaskLoader;
 import android.util.Log;
+import com.sbrt.ponomarev.calendarsample.utlis.CalendarUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,17 +31,17 @@ public class CalendarLoader extends AsyncTaskLoader<List<CalendarEvent>> {
 
     @Override
     public List<CalendarEvent> loadInBackground() {
-        List<CalendarEvent> calls = new ArrayList<>();
+        List<CalendarEvent> events = new ArrayList<>();
 
         Cursor cursor = getCalendarEventCursor();
         if (cursor != null) {
-            CalendarUtils.fillList(cursor, calls);
+            CalendarUtils.fillList(cursor, events);
             cursor.close();
         } else {
             Log.e(TAG, "cursor is null");
         }
 
-        return calls;
+        return events;
     }
 
     @SuppressWarnings("MissingPermission")

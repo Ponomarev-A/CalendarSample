@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/padding">
+
+    <TextView
+            android:id="@+id/date_start"
+            android:layout_alignParentTop="true"
+            style="@style/CalendarEventDateStyle"
+
+            tools:text="10.05.16"/>
+
+    <TextView
+            android:id="@+id/date_end"
+            android:layout_below="@id/date_start"
+            style="@style/CalendarEventDateStyle"
+
+            tools:text="10.05.16"/>
+
+    <TextView
+            android:id="@+id/title"
+            style="@style/CalendarEventTextStyle"
+            android:maxLines="1"
+
+            android:layout_alignParentTop="true"
+            android:layout_toLeftOf="@id/date_start"
+            android:layout_toStartOf="@id/date_start"
+
+            tools:text="Event title"/>
+
+    <TextView
+            android:id="@+id/description"
+            style="@style/CalendarEventTextStyle"
+            android:maxLines="2"
+
+            android:layout_below="@id/title"
+            android:layout_toLeftOf="@id/date_end"
+            android:layout_toStartOf="@id/date_end"
+
+            tools:text="Event description"/>
+
+</RelativeLayout>

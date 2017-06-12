@@ -1,4 +1,4 @@
-package com.sbrt.ponomarev.calendarsample;
+package com.sbrt.ponomarev.calendarsample.ui;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -7,8 +7,14 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import com.sbrt.ponomarev.calendarsample.R;
+import com.sbrt.ponomarev.calendarsample.data.CalendarEvent;
+import com.sbrt.ponomarev.calendarsample.data.CalendarLoader;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CalendarActivity extends AppCompatActivity {
@@ -17,6 +23,10 @@ public class CalendarActivity extends AppCompatActivity {
 
     private static final int PERMISSION_REQUEST_CODE = 10;
     private static final int LOADER_ID = 42;
+
+    private List<CalendarEvent> calendarEventsList;
+    private CalendarEventAdapter calendarEventAdapter;
+    private RecyclerView calendarEventsView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +38,13 @@ public class CalendarActivity extends AppCompatActivity {
         } else {
             initCalendarLoader();
         }
+
+        calendarEventsList = new ArrayList<>();
+        calendarEventAdapter = new CalendarEventAdapter(calendarEventsList);
+
+        calendarEventsView = (RecyclerView) findViewById(R.id.recycler_view);
+        calendarEventsView.setLayoutManager(new LinearLayoutManager(this));
+        calendarEventsView.setAdapter(calendarEventAdapter);
     }
 
     @Override
@@ -61,6 +78,10 @@ public class CalendarActivity extends AppCompatActivity {
         @Override
         public void onLoadFinished(Loader<List<CalendarEvent>> loader, List<CalendarEvent> data) {
             Log.e(TAG, "events = " + data);
+            calendarEventsList.clear();
+            calendarEventsList.addAll(data);
+
+            calendarEventAdapter.notifyDataSetChanged();
         }
 
         @Override

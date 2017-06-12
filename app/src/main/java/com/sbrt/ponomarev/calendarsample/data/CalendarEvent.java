@@ -1,4 +1,4 @@
-package com.sbrt.ponomarev.calendarsample;
+package com.sbrt.ponomarev.calendarsample.data;
 
 /**
  * Created by Ponomarev on 12.06.2017.

@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">CalendarSample</string>
+    <string name="date_from">From %s</string>
+    <string name="date_to">To %s</string>
 </resources>

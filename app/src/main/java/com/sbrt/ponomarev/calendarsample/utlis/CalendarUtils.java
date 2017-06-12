@@ -1,7 +1,8 @@
-package com.sbrt.ponomarev.calendarsample;
+package com.sbrt.ponomarev.calendarsample.utlis;
 
 import android.database.Cursor;
 import android.provider.CalendarContract;
+import com.sbrt.ponomarev.calendarsample.data.CalendarEvent;
 
 import java.util.List;
 
