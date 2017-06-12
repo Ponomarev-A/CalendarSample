@@ -47,4 +47,18 @@ public class CalendarEvent {
         result = 31 * result + (description != null ? description.hashCode() : 0);
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "CalendarEvent{" +
+                "id=" + id +
+                ", calendarId=" + calendarId +
+                ", dtstart=" + dtstart +
+                ", dtend=" + dtend +
+                ", rdate='" + rdate + '\'' +
+                ", eventTimezone='" + eventTimezone + '\'' +
+                ", title='" + title + '\'' +
+                ", description='" + description + '\'' +
+                '}';
+    }
 }
