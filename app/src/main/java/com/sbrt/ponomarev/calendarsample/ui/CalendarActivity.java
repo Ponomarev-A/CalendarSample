@@ -1,6 +1,7 @@
 package com.sbrt.ponomarev.calendarsample.ui;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -10,6 +11,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.View;
 import com.sbrt.ponomarev.calendarsample.R;
 import com.sbrt.ponomarev.calendarsample.data.CalendarEvent;
 import com.sbrt.ponomarev.calendarsample.data.CalendarLoader;
@@ -17,12 +19,15 @@ import com.sbrt.ponomarev.calendarsample.data.CalendarLoader;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CalendarActivity extends AppCompatActivity {
+public class CalendarActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final String TAG = CalendarActivity.class.getSimpleName();
 
+    public static final String EXTRA_EVENT_ID = "EXTRA_EVENT_ID";
+    public static final int LOADER_ID = 42;
+
     private static final int PERMISSION_REQUEST_CODE = 10;
-    private static final int LOADER_ID = 42;
+    private static final int EVENT_REQUEST_CODE = 1;
 
     private List<CalendarEvent> calendarEventsList;
     private CalendarEventAdapter calendarEventAdapter;
@@ -40,7 +45,7 @@ public class CalendarActivity extends AppCompatActivity {
         }
 
         calendarEventsList = new ArrayList<>();
-        calendarEventAdapter = new CalendarEventAdapter(calendarEventsList);
+        calendarEventAdapter = new CalendarEventAdapter(CalendarActivity.this, calendarEventsList);
 
         calendarEventsView = (RecyclerView) findViewById(R.id.recycler_view);
         calendarEventsView.setLayoutManager(new LinearLayoutManager(this));
@@ -68,11 +73,22 @@ public class CalendarActivity extends AppCompatActivity {
         getSupportLoaderManager().initLoader(LOADER_ID, null, new CalendarLoaderCallbacks());
     }
 
+    @Override
+    public void onClick(View v) {
+        int itemPosition = calendarEventsView.getChildLayoutPosition(v);
+        CalendarEvent event = calendarEventsList.get(itemPosition);
+        Log.e(TAG, "item clicked: "+event);
+
+        Intent intent = new Intent(CalendarActivity.this, CalendarEventActivity.class);
+        intent.putExtra(EXTRA_EVENT_ID, event.id);
+        startActivityForResult(intent, EVENT_REQUEST_CODE);
+    }
+
     private class CalendarLoaderCallbacks implements android.support.v4.app.LoaderManager.LoaderCallbacks<List<CalendarEvent>> {
 
         @Override
         public Loader<List<CalendarEvent>> onCreateLoader(int id, Bundle args) {
-            return new CalendarLoader(CalendarActivity.this);
+            return new CalendarLoader(CalendarActivity.this, null);
         }
 
         @Override

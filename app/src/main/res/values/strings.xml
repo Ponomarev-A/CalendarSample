@@ -2,4 +2,8 @@
     <string name="app_name">CalendarSample</string>
     <string name="date_from">From %s</string>
     <string name="date_to">To %s</string>
+    <string name="title">Title</string>
+    <string name="description">Description</string>
+    <string name="from_date">From date</string>
+    <string name="to_date">To date</string>
 </resources>

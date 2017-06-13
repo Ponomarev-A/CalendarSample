@@ -5,47 +5,38 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        tools:context="com.sbrt.ponomarev.calendarsample.ui.CalendarEvent">
+        tools:context="com.sbrt.ponomarev.calendarsample.ui.CalendarEventActivity">
 
     <EditText
             android:id="@+id/event_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="@style/Base.TextAppearance.AppCompat.Large"
-
-            tools:text="Title"
-    />
+            android:hint="@string/title"/>
 
     <EditText
             android:id="@+id/event_description"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
-
-            tools:text="Description"
-
-    />
+            android:hint="@string/description"/>
 
     <Space android:layout_width="match_parent" android:layout_height="40dp"/>
 
-    <android.inputmethodservice.ExtractEditText
+    <EditText
             android:id="@+id/event_date_from"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
-            android:hint="@string/date_from"
-
-            tools:text="To"
+            android:hint="@string/from_date"
     />
 
-    <android.inputmethodservice.ExtractEditText
+    <EditText
             android:id="@+id/event_date_to"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
-            android:hint="@string/date_to"
-
-            tools:text="From"
+            android:hint="@string/to_date"
     />
 
 

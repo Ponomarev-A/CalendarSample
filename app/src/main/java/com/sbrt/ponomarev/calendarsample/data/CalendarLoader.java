@@ -18,10 +18,12 @@ public class CalendarLoader extends AsyncTaskLoader<List<CalendarEvent>> {
 
     private static final String TAG = CalendarLoader.class.getSimpleName();
 
-    public CalendarLoader(Context context) {
-        super(context);
-    }
+    private Long eventId;
 
+    public CalendarLoader(Context context, Long eventId) {
+        super(context);
+        this.eventId = eventId;
+    }
 
     @Override
     protected void onStartLoading() {
@@ -33,7 +35,7 @@ public class CalendarLoader extends AsyncTaskLoader<List<CalendarEvent>> {
     public List<CalendarEvent> loadInBackground() {
         List<CalendarEvent> events = new ArrayList<>();
 
-        Cursor cursor = getCalendarEventCursor();
+        Cursor cursor = getCalendarEventCursor(eventId);
         if (cursor != null) {
             CalendarUtils.fillList(cursor, events);
             cursor.close();
@@ -45,10 +47,12 @@ public class CalendarLoader extends AsyncTaskLoader<List<CalendarEvent>> {
     }
 
     @SuppressWarnings("MissingPermission")
-    private Cursor getCalendarEventCursor() {
-        return getContext().getContentResolver().query(
-                CalendarContract.Events.CONTENT_URI,
-                null, null, null, null
+    private Cursor getCalendarEventCursor(Long id) {
+        return getContext().getContentResolver().query( CalendarContract.Events.CONTENT_URI,
+                null,
+                id == null ? null : CalendarContract.Events._ID + "=?",
+                id == null ? null : new String[] {String.valueOf(id)},
+                null
         );
     }
 }

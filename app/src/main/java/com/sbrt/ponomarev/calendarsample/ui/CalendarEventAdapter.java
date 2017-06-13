@@ -1,5 +1,6 @@
 package com.sbrt.ponomarev.calendarsample.ui;
 
+import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,15 +16,18 @@ import java.util.List;
 
 class CalendarEventAdapter extends RecyclerView.Adapter<CalendarEventViewHolder> {
 
+    private Context context;
     private List<CalendarEvent> events;
 
-    public CalendarEventAdapter(List<CalendarEvent> events) {
+    public CalendarEventAdapter(Context context, List<CalendarEvent> events) {
+        this.context = context;
         this.events = events;
     }
 
     @Override
     public CalendarEventViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.calendar_event_item_layout, parent, false);
+        View view = LayoutInflater.from(context).inflate(R.layout.calendar_event_item_layout, parent, false);
+        view.setOnClickListener((View.OnClickListener) context);
         return new CalendarEventViewHolder(view);
     }
 
