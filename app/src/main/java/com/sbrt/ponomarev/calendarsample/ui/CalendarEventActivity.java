@@ -1,40 +1,52 @@
 package com.sbrt.ponomarev.calendarsample.ui;
 
+import android.app.DatePickerDialog;
+import android.app.Dialog;
+import android.database.Cursor;
 import android.os.Bundle;
+import android.provider.CalendarContract;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+import com.sbrt.ponomarev.calendarsample.CalendarApplication;
 import com.sbrt.ponomarev.calendarsample.R;
+import com.sbrt.ponomarev.calendarsample.data.CalendarDAO;
 import com.sbrt.ponomarev.calendarsample.data.CalendarEvent;
-import com.sbrt.ponomarev.calendarsample.data.CalendarLoader;
+import com.sbrt.ponomarev.calendarsample.utlis.CalendarUtils;
 
-import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
-import java.util.Locale;
+import java.util.GregorianCalendar;
 
 import static com.sbrt.ponomarev.calendarsample.ui.CalendarActivity.LOADER_ID;
 
-public class CalendarEventActivity extends AppCompatActivity {
+public class CalendarEventActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final String TAG = CalendarEventActivity.class.getSimpleName();
 
-    private static final Locale USES_LOCALE = Locale.ENGLISH;
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd:MM:yyyy", USES_LOCALE);
     private static final long DEFAULT_EVENT_ID = -1;
-    private static final String EXTRA_LOADER_TASK = "EXTRA_LOADER_TASK";
+    private static final String TAG_DATE_PICKER = "datePicker";
+    private static final String EXTRA_VIEW_ID = "EXTRA_VIEW_ID";
+    private static final String EXTRA_DATE = "EXTRA_DATE";
 
     private EditText titleView;
     private EditText descriptionView;
-    private EditText toDateView;
-    private EditText fromDateView;
-    private EditText[] editTextViews;
+    private TextView toDateView;
+    private TextView fromDateView;
 
-    private boolean isTextChanged = false;
     private CalendarEvent event;
+    private CalendarDAO dao;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,94 +55,144 @@ public class CalendarEventActivity extends AppCompatActivity {
 
         titleView = (EditText) findViewById(R.id.event_title);
         descriptionView = (EditText) findViewById(R.id.event_description);
-        fromDateView = (EditText) findViewById(R.id.event_date_from);
-        toDateView = (EditText) findViewById(R.id.event_date_to);
-
-        editTextViews = new EditText[]{titleView, descriptionView, fromDateView, toDateView};
-        for (EditText editText : editTextViews) {
-            editText.addTextChangedListener(new TextWatcherImpl());
-        }
+        fromDateView = (TextView) findViewById(R.id.event_date_from);
+        toDateView = (TextView) findViewById(R.id.event_date_to);
+        fromDateView.setOnClickListener(this);
+        toDateView.setOnClickListener(this);
 
         event = new CalendarEvent();
         event.id = getIntent().getLongExtra(CalendarActivity.EXTRA_EVENT_ID, DEFAULT_EVENT_ID);
-    }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        restartLoader(CalendarLoader.CalendarEventTask.READ);
-    }
+        dao = ((CalendarApplication) getApplicationContext()).getCalendarDao();
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-
-        if (isTextChanged) {
-            restartLoader(CalendarLoader.CalendarEventTask.UPDATE);
+        if (event.id == DEFAULT_EVENT_ID) {
+            event.id = dao.insertCalendarEvent(event);
             setResult(RESULT_OK);
+            Toast.makeText(this, R.string.event_created, Toast.LENGTH_SHORT).show();
         } else {
             setResult(RESULT_CANCELED);
+            getSupportLoaderManager().initLoader(LOADER_ID, null, new CalendarEventLoaderCallbacks());
         }
-        finish();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.calendar_event_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.event_delete:
+                int deletedRows = dao.deleteCalendarEvent(event.id);
+                if (deletedRows > 0) {
+                    setResult(RESULT_OK);
+                    Toast.makeText(this, R.string.event_deleted, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, R.string.event_no_action_performed, Toast.LENGTH_SHORT).show();
+                }
+                finish();
+                return true;
+
+            case R.id.event_save:
+                fillCalendarEventFromViews(event);
+                int updatedRows = dao.updateCalendarEvent(event);
+                if (updatedRows > 0) {
+                    setResult(RESULT_OK);
+                    Toast.makeText(this, R.string.event_saved, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, R.string.event_no_action_performed, Toast.LENGTH_SHORT).show();
+                }
+                finish();
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    public void onClick(View v) {
+        int viewId = v.getId();
+        DialogFragment newFragment = new DatePickerFragment();
+
+        Bundle args = new Bundle();
+        args.putInt(EXTRA_VIEW_ID, viewId);
+        args.putLong(EXTRA_DATE, CalendarUtils.getTimeFromView((TextView) findViewById(viewId)));
+
+        newFragment.setArguments(args);
+        newFragment.show(getSupportFragmentManager(), TAG_DATE_PICKER);
     }
 
     private void fillViews(CalendarEvent event) {
         titleView.setText(event.title);
         descriptionView.setText(event.description);
-        fromDateView.setText(getString(R.string.date_from, DATE_FORMAT.format(new Date(event.dtstart))));
-        toDateView.setText(getString(R.string.date_from, DATE_FORMAT.format(new Date(event.dtend))));
+        fromDateView.setText(CalendarUtils.getStringFromTime(new Date(event.dtstart)));
+        toDateView.setText(CalendarUtils.getStringFromTime(new Date(event.dtend)));
     }
 
-    private void restartLoader(CalendarLoader.CalendarEventTask task) {
-        Bundle args = new Bundle();
-        args.putSerializable(EXTRA_LOADER_TASK, task);
-        getSupportLoaderManager().restartLoader(LOADER_ID, args, new CalendarEventLoaderCallbacks());
+    private CalendarEvent fillCalendarEventFromViews(CalendarEvent event) {
+        event.title = String.valueOf(titleView.getText());
+        event.description = String.valueOf(descriptionView.getText());
+        event.dtstart = CalendarUtils.getTimeFromView((TextView) findViewById(fromDateView.getId()));
+        event.dtend = CalendarUtils.getTimeFromView((TextView) findViewById(toDateView.getId()));
+        return event;
     }
 
-    private class CalendarEventLoaderCallbacks implements android.support.v4.app.LoaderManager.LoaderCallbacks<List<CalendarEvent>> {
+    private class CalendarEventLoaderCallbacks implements LoaderManager.LoaderCallbacks {
 
         @Override
-        public Loader<List<CalendarEvent>> onCreateLoader(int id, Bundle args) {
-
-            CalendarLoader.CalendarEventTask task = (CalendarLoader.CalendarEventTask) args.getSerializable(EXTRA_LOADER_TASK);
-            Log.e(TAG, "onCreateLoader: " + task.toString() + ", event : " + event);
-
-            return new CalendarLoader(
-                    CalendarEventActivity.this,
-                    CalendarLoader.CalendarEventTask.READ,
-                    event
+        public Loader onCreateLoader(int id, Bundle args) {
+            return new CursorLoader(CalendarEventActivity.this,
+                    CalendarContract.Events.CONTENT_URI,
+                    null, CalendarContract.Events._ID + "=?", new String[]{String.valueOf(event.id)}, null
             );
-
         }
 
         @Override
-        public void onLoadFinished(Loader<List<CalendarEvent>> loader, List<CalendarEvent> data) {
-            CalendarEvent event = data.get(0);
+        public void onLoadFinished(Loader loader, Object data) {
+            Cursor cursor = (Cursor) data;
+            CalendarEvent event = null;
+
+            if (cursor.moveToFirst()) {
+                event = CalendarUtils.createCalendarEventFromCursor(cursor);
+                fillViews(event);
+            }
+
             Log.e(TAG, "onLoadFinished, event: " + event);
-
-            fillViews(event);
         }
 
         @Override
-        public void onLoaderReset(Loader<List<CalendarEvent>> loader) {
-
+        public void onLoaderReset(Loader loader) {
         }
     }
 
-    private class TextWatcherImpl implements TextWatcher {
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+    public static class DatePickerFragment extends DialogFragment implements DatePickerDialog.OnDateSetListener {
 
+        private int viewId;
+        private long timeMs;
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            Bundle args = getArguments();
+            timeMs = args.getLong(EXTRA_DATE);
+            viewId = args.getInt(EXTRA_VIEW_ID);
+
+            final Calendar c = new GregorianCalendar();
+            c.setTime(new Date(timeMs));
+            int year = c.get(Calendar.YEAR);
+            int month = c.get(Calendar.MONTH);
+            int day = c.get(Calendar.DAY_OF_MONTH);
+
+            // Create a new instance of DatePickerDialog and return it
+            return new DatePickerDialog(getActivity(), this, year, month, day);
         }
 
         @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-        }
-
-        @Override
-        public void afterTextChanged(Editable s) {
-            isTextChanged = true;
+        public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+            ((TextView) getActivity().findViewById(viewId)).setText(CalendarUtils.getStringFromTime(new Date(year - 1900, month, dayOfMonth)));
         }
     }
 }

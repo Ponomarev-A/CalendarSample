@@ -3,18 +3,25 @@ package com.sbrt.ponomarev.calendarsample.ui;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.os.Bundle;
+import android.provider.CalendarContract;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import com.sbrt.ponomarev.calendarsample.R;
 import com.sbrt.ponomarev.calendarsample.data.CalendarEvent;
-import com.sbrt.ponomarev.calendarsample.data.CalendarLoader;
+import com.sbrt.ponomarev.calendarsample.utlis.CalendarUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -84,25 +91,49 @@ public class CalendarActivity extends AppCompatActivity implements View.OnClickL
         startActivityForResult(intent, EVENT_REQUEST_CODE);
     }
 
-    private class CalendarLoaderCallbacks implements android.support.v4.app.LoaderManager.LoaderCallbacks<List<CalendarEvent>> {
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.calendar_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.event_add:
+                startActivityForResult(new Intent(this, CalendarEventActivity.class), EVENT_REQUEST_CODE);
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+
+    private class CalendarLoaderCallbacks implements LoaderManager.LoaderCallbacks {
 
         @Override
-        public Loader<List<CalendarEvent>> onCreateLoader(int id, Bundle args) {
-            return new CalendarLoader(CalendarActivity.this, CalendarLoader.CalendarEventTask.READ, null);
+        public Loader onCreateLoader(int id, Bundle args) {
+            return new CursorLoader(CalendarActivity.this,
+                    CalendarContract.Events.CONTENT_URI,
+                    null, null, null, null
+            );
         }
 
         @Override
-        public void onLoadFinished(Loader<List<CalendarEvent>> loader, List<CalendarEvent> data) {
-            Log.e(TAG, "events = " + data);
+        public void onLoadFinished(Loader loader, Object data) {
             calendarEventsList.clear();
-            calendarEventsList.addAll(data);
+            CalendarUtils.fillList((Cursor) data, calendarEventsList);
+
+            Log.e(TAG, "events = " + calendarEventsList);
 
             calendarEventAdapter.notifyDataSetChanged();
         }
 
         @Override
-        public void onLoaderReset(Loader<List<CalendarEvent>> loader) {
-
+        public void onLoaderReset(Loader arg0) {
         }
     }
 }

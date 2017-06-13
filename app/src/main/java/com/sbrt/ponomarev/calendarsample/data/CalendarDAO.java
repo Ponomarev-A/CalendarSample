@@ -48,17 +48,17 @@ public class CalendarDAO {
 
     public long insertCalendarEvent(CalendarEvent event) {
         // TODO: Don't forget implement method
-        return 0;
+        return 1;
     }
 
     public int deleteCalendarEvent(long id) {
         // TODO: Don't forget implement method
-        return 0;
+        return 1;
     }
 
     public int updateCalendarEvent(CalendarEvent event) {
         // TODO: Don't forget implement method
-        return 0;
+        return 1;
     }
 
     @SuppressWarnings("MissingPermission")

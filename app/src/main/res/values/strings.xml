@@ -6,4 +6,11 @@
     <string name="description">Description</string>
     <string name="from_date">From date</string>
     <string name="to_date">To date</string>
+    <string name="event_delete">Delete event</string>
+    <string name="event_add">Add event</string>
+    <string name="event_save">Save event</string>
+    <string name="event_no_action_performed">No action performed</string>
+    <string name="event_deleted">Event deleted</string>
+    <string name="event_saved">Event saved</string>
+    <string name="event_created">Empty event was created</string>
 </resources>
