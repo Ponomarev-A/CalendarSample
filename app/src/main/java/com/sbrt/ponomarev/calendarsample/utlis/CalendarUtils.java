@@ -20,7 +20,7 @@ public class CalendarUtils {
         }
     }
 
-    private static CalendarEvent createCalendarEventFromCursor(Cursor cursor) {
+    public static CalendarEvent createCalendarEventFromCursor(Cursor cursor) {
         CalendarEvent event = new CalendarEvent();
         event.id = getLong(cursor, CalendarContract.Events._ID);
         event.dtstart = getLong(cursor, CalendarContract.Events.DTSTART);
