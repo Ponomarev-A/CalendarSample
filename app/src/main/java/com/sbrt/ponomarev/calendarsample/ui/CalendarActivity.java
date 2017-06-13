@@ -27,7 +27,7 @@ public class CalendarActivity extends AppCompatActivity implements View.OnClickL
     public static final int LOADER_ID = 42;
 
     private static final int PERMISSION_REQUEST_CODE = 10;
-    private static final int EVENT_REQUEST_CODE = 1;
+    private static final int EVENT_REQUEST_CODE = 122;
 
     private List<CalendarEvent> calendarEventsList;
     private CalendarEventAdapter calendarEventAdapter;
@@ -88,7 +88,7 @@ public class CalendarActivity extends AppCompatActivity implements View.OnClickL
 
         @Override
         public Loader<List<CalendarEvent>> onCreateLoader(int id, Bundle args) {
-            return new CalendarLoader(CalendarActivity.this, null);
+            return new CalendarLoader(CalendarActivity.this, CalendarLoader.CalendarEventTask.READ, null);
         }
 
         @Override

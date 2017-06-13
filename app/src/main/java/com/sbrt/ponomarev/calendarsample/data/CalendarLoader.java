@@ -1,13 +1,11 @@
 package com.sbrt.ponomarev.calendarsample.data;
 
 import android.content.Context;
-import android.database.Cursor;
-import android.provider.CalendarContract;
 import android.support.v4.content.AsyncTaskLoader;
 import android.util.Log;
-import com.sbrt.ponomarev.calendarsample.utlis.CalendarUtils;
+import com.sbrt.ponomarev.calendarsample.CalendarApplication;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -18,11 +16,23 @@ public class CalendarLoader extends AsyncTaskLoader<List<CalendarEvent>> {
 
     private static final String TAG = CalendarLoader.class.getSimpleName();
 
-    private Long eventId;
+    public enum CalendarEventTask {
+        CREATE,
+        READ,
+        UPDATE,
+        DELETE
+    }
 
-    public CalendarLoader(Context context, Long eventId) {
+    private CalendarEventTask task;
+    private CalendarEvent event;
+    private CalendarDAO dao;
+
+
+    public CalendarLoader(Context context, CalendarEventTask task, CalendarEvent event) {
         super(context);
-        this.eventId = eventId;
+        this.task = task;
+        this.event = event;
+        this.dao = ((CalendarApplication) (getContext().getApplicationContext())).getCalendarDao();
     }
 
     @Override
@@ -33,26 +43,39 @@ public class CalendarLoader extends AsyncTaskLoader<List<CalendarEvent>> {
 
     @Override
     public List<CalendarEvent> loadInBackground() {
-        List<CalendarEvent> events = new ArrayList<>();
 
-        Cursor cursor = getCalendarEventCursor(eventId);
-        if (cursor != null) {
-            CalendarUtils.fillList(cursor, events);
-            cursor.close();
-        } else {
-            Log.e(TAG, "cursor is null");
+        List<CalendarEvent> result = null;
+
+        Log.e(TAG, "loadInBackground, event: "+event);
+
+        switch (task) {
+
+            case CREATE:
+                event.id = dao.insertCalendarEvent(event);
+                result = Collections.singletonList(event);
+                break;
+
+            case READ:
+                result = event == null ?
+                        dao.getCalendarEvents() :
+                        Collections.singletonList(dao.getCalendarEvent(event.id));
+                break;
+
+            case UPDATE:
+                boolean isUpdated = dao.updateCalendarEvent(event) > 0;
+                if (isUpdated) {
+                    result = Collections.singletonList(event);
+                }
+                break;
+
+            case DELETE:
+                boolean isDeleted = dao.deleteCalendarEvent(event.id) > 0;
+                if (isDeleted) {
+                    result = Collections.singletonList(event);
+                }
+                break;
         }
 
-        return events;
-    }
-
-    @SuppressWarnings("MissingPermission")
-    private Cursor getCalendarEventCursor(Long id) {
-        return getContext().getContentResolver().query( CalendarContract.Events.CONTENT_URI,
-                null,
-                id == null ? null : CalendarContract.Events._ID + "=?",
-                id == null ? null : new String[] {String.valueOf(id)},
-                null
-        );
+        return result;
     }
 }
