@@ -53,24 +53,14 @@ public class CalendarEventActivity extends AppCompatActivity implements View.OnC
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calendar_event);
 
-        titleView = (EditText) findViewById(R.id.event_title);
-        descriptionView = (EditText) findViewById(R.id.event_description);
-        fromDateView = (TextView) findViewById(R.id.event_date_from);
-        toDateView = (TextView) findViewById(R.id.event_date_to);
-        fromDateView.setOnClickListener(this);
-        toDateView.setOnClickListener(this);
+        initViews();
 
         event = new CalendarEvent();
         event.id = getIntent().getLongExtra(CalendarActivity.EXTRA_EVENT_ID, DEFAULT_EVENT_ID);
 
         dao = ((CalendarApplication) getApplicationContext()).getCalendarDao();
 
-        if (event.id == DEFAULT_EVENT_ID) {
-            event.id = dao.insertCalendarEvent(event);
-            setResult(RESULT_OK);
-            Toast.makeText(this, R.string.event_created, Toast.LENGTH_SHORT).show();
-        } else {
-            setResult(RESULT_CANCELED);
+        if (event.id != DEFAULT_EVENT_ID) {
             getSupportLoaderManager().initLoader(LOADER_ID, null, new CalendarEventLoaderCallbacks());
         }
     }
@@ -86,25 +76,24 @@ public class CalendarEventActivity extends AppCompatActivity implements View.OnC
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.event_delete:
-                int deletedRows = dao.deleteCalendarEvent(event.id);
-                if (deletedRows > 0) {
-                    setResult(RESULT_OK);
-                    Toast.makeText(this, R.string.event_deleted, Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(this, R.string.event_no_action_performed, Toast.LENGTH_SHORT).show();
-                }
+                boolean isDeleted = dao.deleteCalendarEvent(event.id) > 0;
+
+                Toast.makeText(this, isDeleted ?
+                        R.string.event_deleted :
+                        R.string.event_no_action_performed, Toast.LENGTH_SHORT).show();
                 finish();
                 return true;
 
             case R.id.event_save:
                 fillCalendarEventFromViews(event);
-                int updatedRows = dao.updateCalendarEvent(event);
-                if (updatedRows > 0) {
-                    setResult(RESULT_OK);
-                    Toast.makeText(this, R.string.event_saved, Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(this, R.string.event_no_action_performed, Toast.LENGTH_SHORT).show();
-                }
+                boolean isUpdated = (event.id == DEFAULT_EVENT_ID) ?
+                        dao.insertCalendarEvent(event) != DEFAULT_EVENT_ID :
+                        dao.updateCalendarEvent(event) > 0;
+
+                Toast.makeText(this, isUpdated ?
+                        R.string.event_saved :
+                        R.string.event_no_action_performed, Toast.LENGTH_SHORT).show();
+
                 finish();
                 return true;
 
@@ -126,6 +115,15 @@ public class CalendarEventActivity extends AppCompatActivity implements View.OnC
         newFragment.show(getSupportFragmentManager(), TAG_DATE_PICKER);
     }
 
+    private void initViews() {
+        titleView = (EditText) findViewById(R.id.event_title);
+        descriptionView = (EditText) findViewById(R.id.event_description);
+        fromDateView = (TextView) findViewById(R.id.event_date_from);
+        toDateView = (TextView) findViewById(R.id.event_date_to);
+        fromDateView.setOnClickListener(this);
+        toDateView.setOnClickListener(this);
+    }
+
     private void fillViews(CalendarEvent event) {
         titleView.setText(event.title);
         descriptionView.setText(event.description);
@@ -141,10 +139,10 @@ public class CalendarEventActivity extends AppCompatActivity implements View.OnC
         return event;
     }
 
-    private class CalendarEventLoaderCallbacks implements LoaderManager.LoaderCallbacks {
+    private class CalendarEventLoaderCallbacks implements LoaderManager.LoaderCallbacks<Cursor> {
 
         @Override
-        public Loader onCreateLoader(int id, Bundle args) {
+        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             return new CursorLoader(CalendarEventActivity.this,
                     CalendarContract.Events.CONTENT_URI,
                     null, CalendarContract.Events._ID + "=?", new String[]{String.valueOf(event.id)}, null
@@ -152,20 +150,15 @@ public class CalendarEventActivity extends AppCompatActivity implements View.OnC
         }
 
         @Override
-        public void onLoadFinished(Loader loader, Object data) {
-            Cursor cursor = (Cursor) data;
-            CalendarEvent event = null;
-
-            if (cursor.moveToFirst()) {
-                event = CalendarUtils.createCalendarEventFromCursor(cursor);
-                fillViews(event);
-            }
+        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+            event = dao.getCalendarEvent(data);
+            fillViews(event);
 
             Log.e(TAG, "onLoadFinished, event: " + event);
         }
 
         @Override
-        public void onLoaderReset(Loader loader) {
+        public void onLoaderReset(Loader<Cursor> loader) {
         }
     }
 

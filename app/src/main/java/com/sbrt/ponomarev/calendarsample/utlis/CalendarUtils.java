@@ -20,6 +20,7 @@ public class CalendarUtils {
     public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd:MM:yyyy", USES_LOCALE);
 
     public static void fillList(Cursor source, List<CalendarEvent> target) {
+        target.clear();
         if (source.moveToFirst()) {
             while (!source.isAfterLast()) {
                 target.add(createCalendarEventFromCursor(source));
@@ -36,8 +37,6 @@ public class CalendarUtils {
         event.calendarId = getLong(cursor, CalendarContract.Events.CALENDAR_ID);
         event.title = getString(cursor, CalendarContract.Events.TITLE);
         event.description = getString(cursor, CalendarContract.Events.DESCRIPTION);
-        event.eventTimezone = getString(cursor, CalendarContract.Events.EVENT_TIMEZONE);
-        event.rdate = getString(cursor, CalendarContract.Events.RDATE);
         return event;
     }
 

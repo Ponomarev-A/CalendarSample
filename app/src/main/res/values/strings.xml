@@ -12,5 +12,4 @@
     <string name="event_no_action_performed">No action performed</string>
     <string name="event_deleted">Event deleted</string>
     <string name="event_saved">Event saved</string>
-    <string name="event_created">Empty event was created</string>
 </resources>

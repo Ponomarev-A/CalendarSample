@@ -1,12 +1,12 @@
 package com.sbrt.ponomarev.calendarsample.data;
 
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.provider.CalendarContract;
 import com.sbrt.ponomarev.calendarsample.utlis.CalendarUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -23,11 +23,10 @@ public class CalendarDAO {
         this.context = context;
     }
 
-    public CalendarEvent getCalendarEvent(long id) {
+    public CalendarEvent getCalendarEvent(Cursor cursor) {
 
         CalendarEvent event = null;
 
-        Cursor cursor = getCalendarEventCursor(id);
         if (cursor.moveToFirst()) {
             event = CalendarUtils.createCalendarEventFromCursor(cursor);
         }
@@ -36,23 +35,18 @@ public class CalendarDAO {
         return event;
     }
 
-    public List<CalendarEvent> getCalendarEvents() {
+    public void getCalendarEvents(Cursor source, List<CalendarEvent> target) {
 
-        List<CalendarEvent> events = new ArrayList<>();
-
-        Cursor cursor = getCalendarEventCursor(null);
-        if (cursor != null) {
-            CalendarUtils.fillList(cursor, events);
-            cursor.close();
+        if (source != null) {
+            CalendarUtils.fillList(source, target);
+            source.close();
         }
-
-        return events;
     }
 
     @SuppressWarnings("ResourceType")
     public long insertCalendarEvent(CalendarEvent event) {
-        return context.getContentResolver().insert(CalendarContract.Events.CONTENT_URI, createContentValuesFromEvent(event)) != null ?
-                1 : 0;
+        return ContentUris.parseId(context.getContentResolver()
+                .insert(CalendarContract.Events.CONTENT_URI, createContentValuesFromEvent(event)));
     }
 
     @SuppressWarnings("MissingPermission")
@@ -74,7 +68,6 @@ public class CalendarDAO {
 
     private ContentValues createContentValuesFromEvent(CalendarEvent event) {
         ContentValues values = new ContentValues();
-        values.put(CalendarContract.Events._ID, event.id);
         values.put(CalendarContract.Events.TITLE, event.title);
         values.put(CalendarContract.Events.DESCRIPTION, event.description);
         values.put(CalendarContract.Events.DTSTART, event.dtstart);
@@ -82,15 +75,5 @@ public class CalendarDAO {
         values.put(CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault().getID());
         values.put(CalendarContract.Events.CALENDAR_ID, DEFAULT_CALENDAR_ID);
         return values;
-    }
-
-    @SuppressWarnings("MissingPermission")
-    private Cursor getCalendarEventCursor(Long id) {
-        return context.getContentResolver().query(CalendarContract.Events.CONTENT_URI,
-                null,
-                id == null ? null : CalendarContract.Events._ID + "=?",
-                id == null ? null : new String[]{String.valueOf(id)},
-                null
-        );
     }
 }
